@@ -2,6 +2,15 @@
 
 Telegraph style. Root rules only. Read scoped `AGENTS.md` before subtree work.
 
+## Project Memory
+
+# [Git Workflow] Fork main tracks upstream main plus local customizations
+
+**Context**: This repo is maintained against the official OpenClaw upstream while the user keeps a personal fork at `xuegaoge/openclaw` and wants only one long-lived branch they can understand.
+**Implementation/Flow**: Local git remotes are structured as `upstream=https://github.com/openclaw/openclaw.git` and `fork=https://github.com/xuegaoge/openclaw.git`. `main` is the only long-lived branch. Pull updates from `upstream/main`, then rebase or merge local custom commits onto that latest upstream state, and push the resulting `main` to `fork/main`.
+**Key findings/pitfalls**: Do not overwrite `fork/main` with a pure upstream mirror when local customizations need to persist. Do not accumulate extra long-lived fork branches unless the user explicitly asks. Preserve local untracked customization directories while rebasing tracked repo history.
+**Impact/Maintenance notes**: Future maintenance should start with fetching `upstream`, rebasing or merging `main` onto `upstream/main`, validating the custom changes still apply, and then pushing `main` to `fork`. Keep the fork branch layout simple: `main` only, unless the user explicitly requests additional branches.
+
 ## Start
 
 - Repo: `https://github.com/openclaw/openclaw`
