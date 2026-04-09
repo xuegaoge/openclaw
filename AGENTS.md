@@ -11,6 +11,20 @@ Telegraph style. Root rules only. Read scoped `AGENTS.md` before subtree work.
 **Key findings/pitfalls**: Do not treat `fork/main` as the authoritative upstream source for rebases; it is the publish/deploy target after local integration. Do not overwrite `fork/main` with a pure upstream mirror when local customizations need to persist. Do not accumulate extra long-lived fork branches unless the user explicitly asks. Preserve local untracked customization directories while rebasing tracked repo history. When the local working tree is dirty, prefer a temporary clean clone for upstream integration instead of rebasing in place.
 **Impact/Maintenance notes**: Future maintenance should follow this exact chain: `upstream/main` -> local integration of custom patches -> push to `fork/main` -> server update from `fork/main`. Keep the fork branch layout simple: `main` only, unless the user explicitly requests additional branches. For the user's server, prefer a side-by-side deploy (`/root/openclaw.next` build/test/swap) over an in-place rebase when the live checkout contains local drift.
 
+# [Local Assets] Preserve non-project files under 自己创建的非项目文件
+
+**Context**: The user keeps local-only configs, deployment helpers, backups, docs, and custom plugin sources under `自己创建的非项目文件`, and these assets are intentionally outside tracked repo history.
+**Implementation/Flow**: Treat `自己创建的非项目文件` as a local asset root, not as disposable untracked noise. It should remain ignored for version-sync checks, but agents must not delete, clean, or reset it during repo maintenance. If tracked code needs a clean sync, isolate the cleanup to tracked repo state and leave this directory intact. If accidental cleanup happens, restore the full tree from the latest local backup before proceeding.
+**Key findings/pitfalls**: `git clean -fd` will delete this directory because it is untracked. Ignoring it in `.git/info/exclude` only hides status noise; it does not protect the files from destructive cleanup. Do not assume files like `openclaw.json`, `openclaw_bak.json`, `openclaw_node.json`, local SSH keys, or deployment scripts can be regenerated.
+**Impact/Maintenance notes**: Future maintenance must preserve `E:\\study\\openclaw\\自己创建的非项目文件` exactly as a user-owned local asset directory. Do not remove it, even when standardizing repo state. When cleaning the repo, prefer targeted resets of tracked files and avoid `git clean` on user-owned local assets.
+
+# [Plugin Workflow] qunshenhe stays as an isolated path-loaded plugin
+
+**Context**: The user's `qunshenhe` functionality is not part of tracked OpenClaw core/fork history; it is maintained as a standalone local plugin.
+**Implementation/Flow**: The source lives under `自己创建的非项目文件/extensions/qunshenhe` locally and is deployed on the server as `/root/.openclaw/dev/qunshenhe`. It is enabled through config-based plugin loading (`plugins.allow`, `plugins.load.paths`, `plugins.entries.qunshenhe.enabled`) rather than by merging the code into the main repo. The plugin provides the `qunshenhe` tool/command/CLI entry independently of core.
+**Key findings/pitfalls**: Do not assume this feature is integrated into `fork/main` or will survive repo-only syncs automatically. Updating OpenClaw core does not update `qunshenhe`; the plugin must be preserved and deployed separately. Do not delete its local source tree when cleaning untracked files.
+**Impact/Maintenance notes**: Future OpenClaw updates should leave `qunshenhe` isolated unless the user explicitly asks to upstream or vendor it. Server validation should continue to confirm `openclaw plugins info qunshenhe --json` reports `status: "loaded"` after relevant maintenance.
+
 ## Start
 
 - Repo: `https://github.com/openclaw/openclaw`
